@@ -114,7 +114,9 @@ function loadSchemas() {
   const titles = _.map(schemas, schema => schema.title)
   const duplicates = _.keys(_.pick(_.countBy(titles), count => count > 1))
   assert(duplicates.length === 0, 'Duplicate schemas for: ' + duplicates)
-  const ajv = new Ajv()
+  // extendRefs to true suppresses a warning that JS $ref objects have additional
+  // properties aside from $ref.  Unfortunately, this currently drives doc generation.
+  const ajv = new Ajv({extendRefs:true})
   _.forEach(schemas, schema => ajv.addSchema(schema, schema.title))
   ajv.addFormat('address', isValidAddress)
   ajv.addFormat('secret', isValidSecret)
