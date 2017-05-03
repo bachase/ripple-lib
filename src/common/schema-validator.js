@@ -3,136 +3,130 @@
 'use strict' // eslint-disable-line strict
 const _ = require('lodash')
 const assert = require('assert')
-const Ajv = require('ajv')
 const ValidationError = require('./errors').ValidationError
-const {isValidAddress} = require('ripple-address-codec')
-const {isValidSecret} = require('./utils')
 
-function loadSchemas() {
+function loadValidators() {
   // listed explicitly for webpack (instead of scanning schemas directory)
-  const schemas = [
-    require('./schemas/objects/tx-json.json'),
-    require('./schemas/objects/tx-type.json'),
-    require('./schemas/objects/hash128.json'),
-    require('./schemas/objects/hash256.json'),
-    require('./schemas/objects/sequence.json'),
-    require('./schemas/objects/signature.json'),
-    require('./schemas/objects/issue.json'),
-    require('./schemas/objects/ledgerversion.json'),
-    require('./schemas/objects/max-adjustment.json'),
-    require('./schemas/objects/memo.json'),
-    require('./schemas/objects/memos.json'),
-    require('./schemas/objects/public-key.json'),
-    require('./schemas/objects/uint32.json'),
-    require('./schemas/objects/value.json'),
-    require('./schemas/objects/source-adjustment.json'),
-    require('./schemas/objects/destination-adjustment.json'),
-    require('./schemas/objects/tag.json'),
-    require('./schemas/objects/lax-amount.json'),
-    require('./schemas/objects/lax-lax-amount.json'),
-    require('./schemas/objects/min-adjustment.json'),
-    require('./schemas/objects/source-exact-adjustment.json'),
-    require('./schemas/objects/destination-exact-adjustment.json'),
-    require('./schemas/objects/tx-hash.json'),
-    require('./schemas/objects/address.json'),
-    require('./schemas/objects/adjustment.json'),
-    require('./schemas/objects/quality.json'),
-    require('./schemas/objects/amount.json'),
-    require('./schemas/objects/amount-base.json'),
-    require('./schemas/objects/balance.json'),
-    require('./schemas/objects/blob.json'),
-    require('./schemas/objects/currency.json'),
-    require('./schemas/objects/signed-value.json'),
-    require('./schemas/objects/orderbook.json'),
-    require('./schemas/objects/instructions.json'),
-    require('./schemas/objects/settings.json'),
-    require('./schemas/specifications/settings.json'),
-    require('./schemas/specifications/payment.json'),
-    require('./schemas/specifications/escrow-cancellation.json'),
-    require('./schemas/specifications/order-cancellation.json'),
-    require('./schemas/specifications/order.json'),
-    require('./schemas/specifications/escrow-execution.json'),
-    require('./schemas/specifications/escrow-creation.json'),
-    require('./schemas/specifications/payment-channel-create.json'),
-    require('./schemas/specifications/payment-channel-fund.json'),
-    require('./schemas/specifications/payment-channel-claim.json'),
-    require('./schemas/specifications/trustline.json'),
-    require('./schemas/output/sign.json'),
-    require('./schemas/output/submit.json'),
-    require('./schemas/output/get-account-info.json'),
-    require('./schemas/output/get-balances.json'),
-    require('./schemas/output/get-balance-sheet.json'),
-    require('./schemas/output/get-ledger.json'),
-    require('./schemas/output/get-orderbook.json'),
-    require('./schemas/output/get-orders.json'),
-    require('./schemas/output/order-change.json'),
-    require('./schemas/output/get-payment-channel.json'),
-    require('./schemas/output/prepare.json'),
-    require('./schemas/output/ledger-event.json'),
-    require('./schemas/output/get-paths.json'),
-    require('./schemas/output/get-server-info.json'),
-    require('./schemas/output/get-settings.json'),
-    require('./schemas/output/orderbook-orders.json'),
-    require('./schemas/output/outcome.json'),
-    require('./schemas/output/get-transaction.json'),
-    require('./schemas/output/get-transactions.json'),
-    require('./schemas/output/get-trustlines.json'),
-    require('./schemas/output/sign-payment-channel-claim.json'),
-    require('./schemas/output/verify-payment-channel-claim.json'),
-    require('./schemas/input/get-balances.json'),
-    require('./schemas/input/get-balance-sheet.json'),
-    require('./schemas/input/get-ledger.json'),
-    require('./schemas/input/get-orders.json'),
-    require('./schemas/input/get-orderbook.json'),
-    require('./schemas/input/get-paths.json'),
-    require('./schemas/input/get-payment-channel.json'),
-    require('./schemas/input/api-options.json'),
-    require('./schemas/input/get-settings.json'),
-    require('./schemas/input/get-account-info.json'),
-    require('./schemas/input/get-transaction.json'),
-    require('./schemas/input/get-transactions.json'),
-    require('./schemas/input/get-trustlines.json'),
-    require('./schemas/input/prepare-payment.json'),
-    require('./schemas/input/prepare-order.json'),
-    require('./schemas/input/prepare-trustline.json'),
-    require('./schemas/input/prepare-order-cancellation.json'),
-    require('./schemas/input/prepare-settings.json'),
-    require('./schemas/input/prepare-escrow-creation.json'),
-    require('./schemas/input/prepare-escrow-cancellation.json'),
-    require('./schemas/input/prepare-escrow-execution.json'),
-    require('./schemas/input/prepare-payment-channel-create.json'),
-    require('./schemas/input/prepare-payment-channel-fund.json'),
-    require('./schemas/input/prepare-payment-channel-claim.json'),
-    require('./schemas/input/compute-ledger-hash.json'),
-    require('./schemas/input/sign.json'),
-    require('./schemas/input/submit.json'),
-    require('./schemas/input/generate-address.json'),
-    require('./schemas/input/sign-payment-channel-claim.json'),
-    require('./schemas/input/verify-payment-channel-claim.json'),
-    require('./schemas/input/combine.json')
+  const validators = [
+    require('../../gen/validators/objects/tx-json'),
+    require('../../gen/validators/objects/tx-type'),
+    require('../../gen/validators/objects/hash128'),
+    require('../../gen/validators/objects/hash256'),
+    require('../../gen/validators/objects/sequence'),
+    require('../../gen/validators/objects/signature'),
+    require('../../gen/validators/objects/issue'),
+    require('../../gen/validators/objects/ledgerversion'),
+    require('../../gen/validators/objects/max-adjustment'),
+    require('../../gen/validators/objects/memo'),
+    require('../../gen/validators/objects/memos'),
+    require('../../gen/validators/objects/public-key'),
+    require('../../gen/validators/objects/uint32'),
+    require('../../gen/validators/objects/value'),
+    require('../../gen/validators/objects/source-adjustment'),
+    require('../../gen/validators/objects/destination-adjustment'),
+    require('../../gen/validators/objects/tag'),
+    require('../../gen/validators/objects/lax-amount'),
+    require('../../gen/validators/objects/lax-lax-amount'),
+    require('../../gen/validators/objects/min-adjustment'),
+    require('../../gen/validators/objects/source-exact-adjustment'),
+    require('../../gen/validators/objects/destination-exact-adjustment'),
+    require('../../gen/validators/objects/tx-hash'),
+    require('../../gen/validators/objects/address'),
+    require('../../gen/validators/objects/adjustment'),
+    require('../../gen/validators/objects/quality'),
+    require('../../gen/validators/objects/amount'),
+    require('../../gen/validators/objects/amount-base'),
+    require('../../gen/validators/objects/balance'),
+    require('../../gen/validators/objects/blob'),
+    require('../../gen/validators/objects/currency'),
+    require('../../gen/validators/objects/signed-value'),
+    require('../../gen/validators/objects/orderbook'),
+    require('../../gen/validators/objects/instructions'),
+    require('../../gen/validators/objects/settings'),
+    require('../../gen/validators/specifications/settings'),
+    require('../../gen/validators/specifications/payment'),
+    require('../../gen/validators/specifications/escrow-cancellation'),
+    require('../../gen/validators/specifications/order-cancellation'),
+    require('../../gen/validators/specifications/order'),
+    require('../../gen/validators/specifications/escrow-execution'),
+    require('../../gen/validators/specifications/escrow-creation'),
+    require('../../gen/validators/specifications/payment-channel-create'),
+    require('../../gen/validators/specifications/payment-channel-fund'),
+    require('../../gen/validators/specifications/payment-channel-claim'),
+    require('../../gen/validators/specifications/trustline'),
+    require('../../gen/validators/output/sign'),
+    require('../../gen/validators/output/submit'),
+    require('../../gen/validators/output/get-account-info'),
+    require('../../gen/validators/output/get-balances'),
+    require('../../gen/validators/output/get-balance-sheet'),
+    require('../../gen/validators/output/get-ledger'),
+    require('../../gen/validators/output/get-orderbook'),
+    require('../../gen/validators/output/get-orders'),
+    require('../../gen/validators/output/order-change'),
+    require('../../gen/validators/output/get-payment-channel'),
+    require('../../gen/validators/output/prepare'),
+    require('../../gen/validators/output/ledger-event'),
+    require('../../gen/validators/output/get-paths'),
+    require('../../gen/validators/output/get-server-info'),
+    require('../../gen/validators/output/get-settings'),
+    require('../../gen/validators/output/orderbook-orders'),
+    require('../../gen/validators/output/outcome'),
+    require('../../gen/validators/output/get-transaction'),
+    require('../../gen/validators/output/get-transactions'),
+    require('../../gen/validators/output/get-trustlines'),
+    require('../../gen/validators/output/sign-payment-channel-claim'),
+    require('../../gen/validators/output/verify-payment-channel-claim'),
+    require('../../gen/validators/input/get-balances'),
+    require('../../gen/validators/input/get-balance-sheet'),
+    require('../../gen/validators/input/get-ledger'),
+    require('../../gen/validators/input/get-orders'),
+    require('../../gen/validators/input/get-orderbook'),
+    require('../../gen/validators/input/get-paths'),
+    require('../../gen/validators/input/get-payment-channel'),
+    require('../../gen/validators/input/api-options'),
+    require('../../gen/validators/input/get-settings'),
+    require('../../gen/validators/input/get-account-info'),
+    require('../../gen/validators/input/get-transaction'),
+    require('../../gen/validators/input/get-transactions'),
+    require('../../gen/validators/input/get-trustlines'),
+    require('../../gen/validators/input/prepare-payment'),
+    require('../../gen/validators/input/prepare-order'),
+    require('../../gen/validators/input/prepare-trustline'),
+    require('../../gen/validators/input/prepare-order-cancellation'),
+    require('../../gen/validators/input/prepare-settings'),
+    require('../../gen/validators/input/prepare-escrow-creation'),
+    require('../../gen/validators/input/prepare-escrow-cancellation'),
+    require('../../gen/validators/input/prepare-escrow-execution'),
+    require('../../gen/validators/input/prepare-payment-channel-create'),
+    require('../../gen/validators/input/prepare-payment-channel-fund'),
+    require('../../gen/validators/input/prepare-payment-channel-claim'),
+    require('../../gen/validators/input/compute-ledger-hash'),
+    require('../../gen/validators/input/sign'),
+    require('../../gen/validators/input/submit'),
+    require('../../gen/validators/input/generate-address'),
+    require('../../gen/validators/input/sign-payment-channel-claim'),
+    require('../../gen/validators/input/verify-payment-channel-claim'),
+    require('../../gen/validators/input/combine')
   ]
-  const titles = _.map(schemas, schema => schema.title)
-  const duplicates = _.keys(_.pick(_.countBy(titles), count => count > 1))
-  assert(duplicates.length === 0, 'Duplicate schemas for: ' + duplicates)
-  // extendRefs to true suppresses a warning that JS $ref objects have additional
-  // properties aside from $ref.  Unfortunately, this currently drives doc generation.
-  const ajv = new Ajv({extendRefs:true})
-  _.forEach(schemas, schema => ajv.addSchema(schema, schema.title))
-  ajv.addFormat('address', isValidAddress)
-  ajv.addFormat('secret', isValidSecret)
-  return ajv
+
+  return _.keyBy(validators, o => o.schema.title)
 }
 
-const ajv = loadSchemas()
+const validators = loadValidators()
 
 function schemaValidate(schemaName: string, object: any): void {
-  const isValid = ajv.validate(schemaName, object)
-  if (!isValid) {
-    throw new ValidationError(ajv.errorsText())
+  if(schemaName in validators)
+  {
+    const isValid = validators[schemaName](object)
+    if (!isValid) {
+      throw new ValidationError(validators[schemaName].errors)
+    }
+  }
+  else{
+      throw new ValidationError("Unknown schema " + schemaName)
   }
 }
 
 module.exports = {
-  schemaValidate,
-  isValidSecret
+  schemaValidate
 }

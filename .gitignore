@@ -48,6 +48,9 @@ test/config.js
 # Ignore IntelliJ files
 .idea
 
+# Ignore generated validators
+gen/*
+
 # Ignore npm-debug
 npm-debug.log
 
