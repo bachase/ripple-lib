@@ -109,7 +109,7 @@ function loadValidators() {
     require('../../gen/validators/input/combine')
   ]
 
-  return _.keyBy(validators, o => o.schema.title)
+  return _.indexBy(validators, o => o.schema.title)
 }
 
 const validators = loadValidators()

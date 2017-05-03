@@ -21,7 +21,7 @@ function hackFixFormats(moduleCode) {
     _.forEach(customFormats, format => {
         if(moduleCode.includes("formats." + format.name))
         {
-            moduleCode = moduleCode.replace("formats." + format.name, format.newName)
+            moduleCode = moduleCode.replace(new RegExp("formats." + format.name,'g'),  format.newName)
             moduleCode = moduleCode.replace("formats')();\n","formats')();\n" + format.requires)
         }
     } );
